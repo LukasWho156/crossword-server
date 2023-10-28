@@ -228,7 +228,7 @@ async fn main() -> std::io::Result<()> {
     let client = set_up_db(uri.as_str()).await.expect("Should be able to connect do Mongo DB");
     let db = client.database(env::var("DATABASE").unwrap_or(String::from("crossword")).as_str());
     let port: u16 = env::var("PORT").unwrap_or(String::from("3000")).parse().unwrap_or(3000);
-    let static_directory: String = env::var("STATIC_DIR").unwrap_or(String::from("/"));
+    let static_directory: String = env::var("STATIC_DIR").unwrap_or(String::from("./static"));
     //let jwt_secret = env::var("JWT_SECRET").unwrap_or(String::from("supersecret"));
     //let pepper = env::var("PEPPER").unwrap_or(String::from("pepper"));
 
@@ -247,7 +247,7 @@ async fn main() -> std::io::Result<()> {
             //.service(service_get_puzzles_by_user)
             //.service(service_post_register)
             //.service(service_post_login)
-            .service(actix_files::Files::new(&static_directory, "./static"))
+            .service(actix_files::Files::new("/", &static_directory))
     })
     .bind(("0.0.0.0", port))?
     .run()
