@@ -1,0 +1,96 @@
+{
+    "title": "404 - Rätsel Nicht Gefunden",
+    "width": 9,
+    "height": 5,
+    "solution": [
+        "N.FOUND.S",
+        "O.LS.AI.A",
+        "TRUT.REIM",
+        "..RE.B..B",
+        "..ENTE..A"
+    ],
+    "clues": {
+        "horizontal": [
+            {
+                "x": 2,
+                "y": 0,
+                "length": 5,
+                "clue": "Lost and _____"
+            },
+            {
+                "x": 2,
+                "y": 1,
+                "length": 2,
+                "clue": "Zeigt Penguinen den Inhalt eines Ordners an."
+            },
+            {
+                "x": 5,
+                "y": 1,
+                "length": 2,
+                "clue": "Nicht wirklich intelligent, aber definitiv künstlich (engl.)."
+            },
+            {
+                "x": 0,
+                "y": 2,
+                "length": 4,
+                "clue": "In diesem Hahn steckt fast die Wahrheit."
+            },
+            {
+                "x": 5,
+                "y": 2,
+                "length": 4,
+                "clue": "Schleim und Keim und dieses Wort."
+            },
+            {
+                "x": 2,
+                "y": 3,
+                "length": 2,
+                "clue": "Kein Wochentag, liegt aber trotzdem zwischen Do und Mi."
+            },
+            {
+                "x": 2,
+                "y": 4,
+                "length": 4,
+                "clue": "In diesem Vogel steckt definitv keine Wahrheit."
+            }
+        ],
+        "vertical": [
+            {
+                "x": 0,
+                "y": 0,
+                "length": 3, 
+                "clue": "Macht aus wahr falsch und aus falsch wahr."
+            },
+            {
+                "x": 2,
+                "y": 0,
+                "length": 5,
+                "clue": "Gänge"
+            },
+            {
+                "x": 3,
+                "y": 0,
+                "length": 5,
+                "clue": "Gegenüber gibt es nichts Neues."
+            },
+            {
+                "x": 5,
+                "y": 0,
+                "length": 5,
+                "clue": "Was übrig bleiben kann, nachdem die Zeit ihren Job gemacht hat."
+            },
+            {
+                "x": 6,
+                "y": 0,
+                "length": 3,
+                "clue": "Auf Deutsch deutlich harmloser als auf Englisch."
+            },
+            {
+                "x": 8,
+                "y": 0,
+                "length": 5,
+                "clue": "Ermöglicht es Windows, mit anderen Betriebssystemen zu tanzen."
+            }
+        ]
+    }
+}

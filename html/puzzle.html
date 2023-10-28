@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Kreuzworträtsel</title>
+        <link rel="stylesheet" href="/styles.css">
+        <script src="/puzzle.js" defer></script>
+    </head>
+    <body>
+        <div class="full">
+            <div class="header">
+                <h1>Kreuzworträtsel</h1>
+            </div>
+            <div class="body">
+                <div class="hintArea">
+                    <h2>Hinweise:</h2>
+                </div>
+                <div class="mainArea">
+                    <div class="puzzleArea">
+                        <div class="loadingZone">
+                            <div class="loadingIndicator"></div>
+                            <div class="loadingIndicator d1"></div>
+                            <div class="loadingIndicator d2"></div>
+                        </div>
+                    </div>
+                    <div class="toolsArea">
+                        <button id="restart">Neu starten</button>
+                        <span>|</span>
+                        <button id="check">Überprüfen</button>
+                        <span>|</span>
+                        <span>
+                            <input type="checkbox" name="autocheck" id="autocheck">
+                            <label for="autocheck">Live-Überprüfung</label>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <dialog id="wrongAlert">
+            <h3>Nicht ganz richtig</h3>
+            <p>Mindestens ein Buchstabe wurde falsch eingetragen.</p>
+            <button>Verstanden.</button>
+        </dialog>
+        <dialog id="correctAlert">
+            <h3>Alles richtig!</h3>
+            <p>Herzlichen Glückwunsch! Du hast das Rätsel gelöst.</p>
+            <button>Verstanden.</button>
+        </dialog>
+    </body>
+</html>

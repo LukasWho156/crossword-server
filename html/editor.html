@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Kreuzworträtsel</title>
+        <link rel="stylesheet" href="/styles.css">
+        <script src="/editor.js" defer></script>
+    </head>
+    <body>
+        <div class="full">
+            <div class="header">
+                <h1 contenteditable="true">Mein Kreuzworträtsel</h1>
+            </div>
+            <div class="body">
+                <div class="hintArea">
+                    <h2>Hinweise:</h2>
+                </div>
+                <div class="mainArea">
+                    <div class="resizePuzzle vertical">
+                        <button id="resizePlusTop">+</button>
+                        <button id="resizeMinusTop">-</button>
+                    </div>
+                    <div class="editorPuzzleArea">
+                        <div class="resizePuzzle horizontal">
+                            <button id="resizePlusLeft">+</button>
+                            <button id="resizeMinusLeft">-</button>
+                        </div>
+                        <div class="puzzleArea reduced">
+                            <div class="loadingZone">
+                                <div class="loadingIndicator"></div>
+                                <div class="loadingIndicator d1"></div>
+                                <div class="loadingIndicator d2"></div>
+                            </div>
+                        </div>
+                        <div class="resizePuzzle horizontal">
+                            <button id="resizePlusRight">+</button>
+                            <button id="resizeMinusRight">-</button>
+                        </div>
+                    </div>
+                    <div class="resizePuzzle vertical">
+                        <button id="resizePlusBottom">+</button>
+                        <button id="resizeMinusBottom">-</button>
+                    </div>
+                    <div class="toolsArea">
+                        <button id="new">Neues Rätsel</button>
+                        <span>|</span>
+                        <button id="import">Rätsel importieren</button>
+                        <span>|</span>
+                        <button id="export">Rätsel exportieren</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <dialog id="clueDialog">
+            <form id="clueDialogForm">
+                <h3>Hinweiß geben:</h3>
+                <p>Welchen Hinweis willst du für den Begriff <span id="clueDialogWord"></span> geben?</p>
+                <p><input type="text" placeholder="Ein wirklich toller Hinweis"></p>
+                <div>
+                    <button type="submit">Okay</button>
+                    <button type="button" id="clueDialogCancel">Abbrechen</button>
+                </div>
+            </form>
+        </dialog>
+        <dialog id="importDialog">
+            <form id="importDialogForm">
+                <h3>Rätsel importieren:</h3>
+                <p>Lade eine .json-Datei von deinem Computer hoch:</p>
+                <p><input type="file"></p>
+                <div>
+                    <button type="submit">Okay</button>
+                    <button type="button" id="importDialogCancel">Abbrechen</button>
+                </div>
+            </form>
+        </dialog>
+    </body>
+</html>
