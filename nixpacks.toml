@@ -1,2 +1,2 @@
-[phases.build]
-cmds = ["...", "cp -r ./static bin", "cp -r ./html bin"]
+[phase.build]
+  onlyIncludeFiles = ['./static', './html']
