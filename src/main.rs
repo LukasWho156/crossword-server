@@ -58,6 +58,7 @@ struct User {
 #[derive(Debug)]
 struct ServerData {
     db: Database,
+    root_dir: String,
     //jwt_secret: String,
     //pepper: String,
 }
@@ -204,8 +205,9 @@ async fn service_post_login(data: web::Data<ServerData>, user: web::Json<User>) 
 } */
 
 #[get("editor")]
-async fn page_editor(req: HttpRequest) -> HttpResponse {
-    let file = NamedFile::open_async("./html/editor.html").await;
+async fn page_editor(req: HttpRequest, data: web::Data<ServerData>) -> HttpResponse {
+    let path = format!("{}/html/editor.html", data.root_dir);
+    let file = NamedFile::open_async(&path).await;
     match file {
         Ok(f) => f.into_response(&req),
         Err(_) => HttpResponse::InternalServerError().body("error reading file"),
@@ -213,8 +215,10 @@ async fn page_editor(req: HttpRequest) -> HttpResponse {
 }
 
 #[get("puzzle/{id}")]
-async fn page_puzzle(req: HttpRequest) -> HttpResponse {
-    let file = NamedFile::open_async("./html/puzzle.html").await;
+async fn page_puzzle(req: HttpRequest, data: web::Data<ServerData>) -> HttpResponse {
+    let path = format!("{}/html/puzzle.html", data.root_dir);
+    println!("{}", path);
+    let file = NamedFile::open_async(path).await;
     match file {
         Ok(f) => f.into_response(&req),
         Err(_) => HttpResponse::InternalServerError().body("error reading file"),
@@ -228,7 +232,8 @@ async fn main() -> std::io::Result<()> {
     let client = set_up_db(uri.as_str()).await.expect("Should be able to connect do Mongo DB");
     let db = client.database(env::var("DATABASE").unwrap_or(String::from("crossword")).as_str());
     let port: u16 = env::var("PORT").unwrap_or(String::from("3000")).parse().unwrap_or(3000);
-    let static_directory: String = env::var("STATIC_DIR").unwrap_or(String::from("./static"));
+    let root_dir: String = env::var("ROOT_DIR").unwrap_or(String::from("."));
+    println!("{}", root_dir);
     //let jwt_secret = env::var("JWT_SECRET").unwrap_or(String::from("supersecret"));
     //let pepper = env::var("PEPPER").unwrap_or(String::from("pepper"));
 
@@ -238,6 +243,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .app_data(web::Data::new(ServerData {
                 db: db.clone(),
+                root_dir: root_dir.clone(),
                 //jwt_secret: jwt_secret.clone(),
                 //pepper: pepper.clone(),
             }))
@@ -247,7 +253,7 @@ async fn main() -> std::io::Result<()> {
             //.service(service_get_puzzles_by_user)
             //.service(service_post_register)
             //.service(service_post_login)
-            .service(actix_files::Files::new("/", &static_directory))
+            .service(actix_files::Files::new("/", format!("{}/static", root_dir)))
     })
     .bind(("0.0.0.0", port))?
     .run()
