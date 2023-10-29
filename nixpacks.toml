@@ -1,2 +1,2 @@
-[phase.build]
-  onlyIncludeFiles = ['./static', './html']
+[start]
+  onlyIncludeFiles = ['./bin', './static', './html']
