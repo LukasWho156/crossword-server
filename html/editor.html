@@ -46,6 +46,8 @@
                         <button id="import">Rätsel importieren</button>
                         <span>|</span>
                         <button id="export">Rätsel exportieren</button>
+                        <span>|</span>
+                        <button id="publish">Rätsel veröffentlichen</button>
                     </div>
                 </div>
             </div>
@@ -71,6 +73,12 @@
                     <button type="button" id="importDialogCancel">Abbrechen</button>
                 </div>
             </form>
+        </dialog>
+        <dialog id="publishDialog">
+            <h3>Rätsel veröffentlicht!</h3>
+            <p>Link zu deinem Rätsel:</p>
+            <p><a href="#" id="newPuzzleLink"></a></p>
+            <button type="button" id="publishDialogClose">Alles klar!</button>
         </dialog>
     </body>
 </html>

@@ -82,6 +82,37 @@ const main = async () => {
         download.remove();
     })
 
+    // publish
+    const publishDialog = document.querySelector('#publishDialog') as HTMLDialogElement;
+    document.querySelector('#publishDialogClose').addEventListener('click', () => publishDialog.close());
+    document.querySelector('#publish').addEventListener('click', () => {
+        const puzzleData: PuzzleData = puzzle.createDownloadData();
+        const saveData = {
+            title: document.querySelector('h1').textContent,
+            ...puzzleData,
+        }
+        fetch('/api/publish', {
+            method: 'POST',
+            body: JSON.stringify(saveData),
+            headers: { "Content-Type": "application/json" }
+        }).then(res => {
+            if(res.status !== 200) {
+                throw new Error("bad response");
+            }
+            return res.text();
+        }).then(id => {
+            let curUrl = new URL(document.URL);
+            let link = `${curUrl.protocol}//${curUrl.hostname}:${curUrl.port}/puzzle/${id}`;
+            console.log(link);
+            let e = document.querySelector('#newPuzzleLink') as HTMLAnchorElement;
+            e.textContent = link;
+            e.href = link;
+            publishDialog.showModal();
+        }).catch(e => {
+            console.error(e);
+        })
+    });
+
     // change puzzle dimensions
     document.querySelector('#resizePlusBottom').addEventListener('click', () => {
         puzzle.addBottomRow();

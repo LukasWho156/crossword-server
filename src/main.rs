@@ -1,15 +1,15 @@
-use std::env;
+use std::{env, io::Read};
 use serde::{Serialize, Deserialize};
-use mongodb::{bson::doc, Client, options::ClientOptions, Database};
-use actix_web::{get, web, App, HttpResponse, HttpServer, HttpRequest};
-use actix_cors::Cors;
+use mongodb::{bson::doc, Client, options::ClientOptions, Database, options::FindOptions};
+use actix_web::{get, post, web, App, HttpResponse, HttpServer, HttpRequest, http::header::ContentType};
+//use actix_cors::Cors;
 use actix_files::NamedFile;
-use futures::stream::TryStreamExt;
+use futures::{stream::TryStreamExt, StreamExt};
 //use argon2::{Argon2, password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString}};
 //use jsonwebtoken::{EncodingKey, DecodingKey, Validation};
 //use actix_web_httpauth::headers::authorization::{Authorization, Bearer};
 
-//mod hrid;
+mod hrid;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct WordData {
@@ -27,8 +27,9 @@ struct Clues {
 
 #[derive(Serialize, Deserialize, Debug)]
 struct PuzzleData {
+    _id: Option<String>,
     title: String,
-    user: String,
+    user: Option<String>,
     width: u8,
     height: u8,
     solution: Vec<String>,
@@ -37,6 +38,21 @@ struct PuzzleData {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+struct ReducedPuzzleData {
+    _id: String,
+    title: String,
+    user: Option<String>,
+    published: Option<bool>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Collection {
+    title: String,
+    description: String,
+    puzzles: Vec<String>,
+}
+
+/* #[derive(Serialize, Deserialize, Debug)]
 struct UserClaims {
     exp: usize,
     user: String,
@@ -53,7 +69,7 @@ struct FullUser {
 struct User {
     username: String,
     pw: String,
-}
+} */
 
 #[derive(Debug)]
 struct ServerData {
@@ -76,6 +92,30 @@ async fn get_puzzle(id: String, db: &Database) -> Result<Option<PuzzleData>, Box
     }, None).await?;
     let puzzle = data.try_next().await?;
     Ok(puzzle)
+}
+
+async fn get_collection(id: String, db: &Database) -> Result<(Collection, Vec<ReducedPuzzleData>), Box<dyn std::error::Error>> {
+    let collection = db.collection::<Collection>("collections");
+    let mut data = collection.find(doc! {
+        "_id": id,
+    }, None).await?;
+    let collection = data.try_next().await?;
+    if collection.is_none() {
+        return Err(Box::new(actix_web::error::ErrorNotFound("collection not found")));
+    }
+    let collection = collection.unwrap();
+    let puzzles = db.collection::<ReducedPuzzleData>("puzzles");
+    let mut data = puzzles.find(doc! {
+        "_id": doc! { "$in": &collection.puzzles }
+    }, FindOptions::builder().projection(doc! {
+        "_id": true,
+        "title": true,
+    }).build()).await?;
+    let mut puzzles: Vec<ReducedPuzzleData> = Vec::new();
+    while let Some(puzzle) = data.try_next().await? {
+        puzzles.push(puzzle);
+    }
+    Ok((collection, puzzles))
 }
 
 /* async fn get_puzzles_by_user(userid: String, db: &Database) -> Result<Vec<PuzzleData>, Box<dyn std::error::Error>> {
@@ -130,6 +170,22 @@ async fn service_get_puzzle(id: web::Path<String>, data: web::Data<ServerData>) 
             HttpResponse::InternalServerError().body("internal server error")
         },
     }   
+}
+
+#[post("api/publish")]
+async fn publish_puzzle(puzzle: web::Json<PuzzleData>, data: web::Data<ServerData>) -> HttpResponse {
+    let mut puzzle = puzzle.into_inner();
+    let id = hrid::get_hrid();
+    puzzle._id = Some(id.clone());
+    let db = &data.db;
+    let collection = db.collection::<PuzzleData>("puzzles");
+    match collection.insert_one(puzzle, None).await {
+        Ok(_) => HttpResponse::Ok().body(id),
+        Err(e) => {
+            println!("Error: {}", e);
+            HttpResponse::InternalServerError().body("internal server error")
+        }
+    }
 }
 
 /* #[get("api/puzzlesby/{userid}")]
@@ -217,12 +273,39 @@ async fn page_editor(req: HttpRequest, data: web::Data<ServerData>) -> HttpRespo
 #[get("puzzle/{id}")]
 async fn page_puzzle(req: HttpRequest, data: web::Data<ServerData>) -> HttpResponse {
     let path = format!("{}/html/puzzle.html", data.root_dir);
-    println!("{}", path);
     let file = NamedFile::open_async(path).await;
     match file {
         Ok(f) => f.into_response(&req),
         Err(_) => HttpResponse::InternalServerError().body("error reading file"),
     }
+}
+
+#[get("collection/{id}")]
+async fn page_collection(id: web::Path<String>, data: web::Data<ServerData>) -> HttpResponse {
+    let path = format!("{}/html/collection.html", data.root_dir);
+    let file = NamedFile::open_async(path).await;
+    if file.is_err() {
+        return HttpResponse::InternalServerError().body("error reading file");
+    }
+    let collection = get_collection(id.into_inner(), &data.db).await;
+    if collection.is_err() {
+        return HttpResponse::NotFound().body("collection not found");
+    }
+    let (collection, puzzles) = collection.unwrap();
+    let file = file.unwrap();
+    let mut file = file.file();
+    let mut contents = String::new();
+    let status = file.read_to_string(&mut contents);
+    if status.is_err() {
+        return HttpResponse::InternalServerError().body("error reading file");
+    }
+    contents = contents.replace("#title", &collection.title);
+    contents = contents.replace("#description", &collection.description);
+    let links = puzzles.iter().fold(String::from("<ul>"), |acc, p| {
+        acc + &format!("<li><a href=\"/puzzle/{}\">{}</a)</li>", p._id, p.title)
+    }) + "</ul>";
+    contents = contents.replace("#puzzles", &links);
+    HttpResponse::Ok().content_type(ContentType::html()).body(contents)
 }
 
 #[actix_web::main]
@@ -238,9 +321,9 @@ async fn main() -> std::io::Result<()> {
     //let pepper = env::var("PEPPER").unwrap_or(String::from("pepper"));
 
     HttpServer::new(move || {
-        let cors = Cors::permissive();
-        App::new()
-            .wrap(cors)
+        //let cors = Cors::permissive();
+        let mut app = App::new()
+            //.wrap(cors)
             .app_data(web::Data::new(ServerData {
                 db: db.clone(),
                 root_dir: root_dir.clone(),
@@ -248,8 +331,12 @@ async fn main() -> std::io::Result<()> {
                 //pepper: pepper.clone(),
             }))
             .service(page_puzzle)
-            .service(page_editor)
-            .service(service_get_puzzle)
+            .service(page_collection);
+        if let Ok(_not_forbidden) = env::var("USE_EDITOR") {
+            app = app.service(page_editor)
+                .service(publish_puzzle);
+        }
+        app.service(service_get_puzzle)
             //.service(service_get_puzzles_by_user)
             //.service(service_post_register)
             //.service(service_post_login)
