@@ -5,6 +5,7 @@ use actix_web::{get, post, web, App, HttpResponse, HttpServer, HttpRequest, http
 //use actix_cors::Cors;
 use actix_files::NamedFile;
 use futures::{stream::TryStreamExt, StreamExt};
+use chrono::{DateTime, offset::Utc};
 //use argon2::{Argon2, password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString}};
 //use jsonwebtoken::{EncodingKey, DecodingKey, Validation};
 //use actix_web_httpauth::headers::authorization::{Authorization, Bearer};
@@ -46,10 +47,23 @@ struct ReducedPuzzleData {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+struct DatedItem {
+    id: String,
+    release_date: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+enum CollectionItem {
+    Default(String),
+    Dated(DatedItem),
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 struct Collection {
     title: String,
     description: String,
-    puzzles: Vec<String>,
+    puzzles: Vec<CollectionItem>,
 }
 
 /* #[derive(Serialize, Deserialize, Debug)]
@@ -99,14 +113,31 @@ async fn get_collection(id: String, db: &Database) -> Result<(Collection, Vec<Re
     let mut data = collection.find(doc! {
         "_id": id,
     }, None).await?;
+    //println!("collection: {:?}", data);
     let collection = data.try_next().await?;
+    println!("collection: {:?}", collection);
     if collection.is_none() {
         return Err(Box::new(actix_web::error::ErrorNotFound("collection not found")));
     }
     let collection = collection.unwrap();
+    let ids: Vec<String> = collection.puzzles.iter().filter_map(|e| {
+        match &e {
+            CollectionItem::Default(id) => Some(id.clone()),
+            CollectionItem::Dated(item) => {
+                let now = Utc::now();
+                let release_date = DateTime::parse_from_rfc3339(&item.release_date).unwrap();
+                if release_date > now {
+                    None
+                } else {
+                    Some(item.id.clone())
+                }
+            },
+        }
+    }).collect();
+    println!("Ids: {:?}", ids);
     let puzzles = db.collection::<ReducedPuzzleData>("puzzles");
     let mut data = puzzles.find(doc! {
-        "_id": doc! { "$in": &collection.puzzles }
+        "_id": doc! { "$in": &ids }
     }, FindOptions::builder().projection(doc! {
         "_id": true,
         "title": true,
