@@ -4,7 +4,7 @@ use mongodb::{bson::doc, Client, options::ClientOptions, Database, options::Find
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, HttpRequest, http::header::ContentType};
 //use actix_cors::Cors;
 use actix_files::NamedFile;
-use futures::{stream::TryStreamExt, StreamExt};
+use futures::stream::TryStreamExt;
 use chrono::{DateTime, offset::Utc};
 //use argon2::{Argon2, password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString}};
 //use jsonwebtoken::{EncodingKey, DecodingKey, Validation};
@@ -38,7 +38,7 @@ struct PuzzleData {
     published: Option<bool>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct ReducedPuzzleData {
     _id: String,
     title: String,
@@ -146,7 +146,10 @@ async fn get_collection(id: String, db: &Database) -> Result<(Collection, Vec<Re
     while let Some(puzzle) = data.try_next().await? {
         puzzles.push(puzzle);
     }
-    Ok((collection, puzzles))
+    let sorted_puzzles = ids.iter().filter_map(|e| {
+        puzzles.iter().find(|p| &p._id == e)
+    }).map(|e| e.clone()).collect();
+    Ok((collection, sorted_puzzles))
 }
 
 /* async fn get_puzzles_by_user(userid: String, db: &Database) -> Result<Vec<PuzzleData>, Box<dyn std::error::Error>> {
